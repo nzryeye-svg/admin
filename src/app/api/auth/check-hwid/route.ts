@@ -1,6 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
+// CORS headers untuk production
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Max-Age': '86400',
+}
+
+// Handle preflight OPTIONS request
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: corsHeaders,
+  })
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { hwid } = await request.json()
@@ -8,7 +24,10 @@ export async function POST(request: NextRequest) {
     if (!hwid) {
       return NextResponse.json(
         { error: 'HWID is required' },
-        { status: 400 }
+        { 
+          status: 400,
+          headers: corsHeaders 
+        }
       )
     }
 
@@ -54,13 +73,18 @@ export async function POST(request: NextRequest) {
       is_authorized: isAuthorized,
       message,
       license_info: data || null
+    }, {
+      headers: corsHeaders
     })
 
   } catch (error) {
     console.error('API error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: corsHeaders 
+      }
     )
   }
 }

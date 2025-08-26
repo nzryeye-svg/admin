@@ -46,7 +46,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { admin_password, hwid, customer_name, customer_email, license_type, expires_at, notes } = body
+    const { admin_password, hwid, customer_name, customer_email, license_type, notes } = body
+    
+    console.log('POST Request body:', body)
 
     const expectedPassword = process.env.ADMIN_PASSWORD || 'bintang088'
     if (admin_password !== expectedPassword) {
@@ -63,17 +65,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const insertData = {
+      hwid: hwid.toUpperCase(),
+      customer_name: customer_name || null,
+      customer_email: customer_email || null,
+      license_type: license_type || 'basic',
+      notes: notes || null,
+      is_active: true
+    }
+
+    console.log('Inserting data:', insertData)
+
     const { data, error } = await supabase
       .from('hwid_licenses')
-      .insert({
-        hwid: hwid.toUpperCase(),
-        customer_name,
-        customer_email,
-        license_type: license_type || 'basic',
-        expires_at,
-        notes,
-        is_active: true
-      })
+      .insert(insertData)
       .select()
       .single()
 

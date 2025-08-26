@@ -23,7 +23,6 @@ export default function AdminDashboard() {
     customer_name: '',
     customer_email: '',
     license_type: 'basic',
-    expires_at: '',
     notes: ''
   })
 
@@ -111,7 +110,6 @@ export default function AdminDashboard() {
           customer_name: '',
           customer_email: '',
           license_type: 'basic',
-          expires_at: '',
           notes: ''
         })
         setShowAddForm(false)
@@ -336,26 +334,14 @@ export default function AdminDashboard() {
               
               <div>
                 <label className="block text-gray-300 text-sm font-bold mb-2">
-                  Expires At (optional)
+                  Notes (optional)
                 </label>
                 <input
-                  type="datetime-local"
-                  value={newLicense.expires_at}
-                  onChange={(e) => setNewLicense({...newLicense, expires_at: e.target.value})}
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:border-blue-500"
-                />
-              </div>
-              
-              <div className="md:col-span-2">
-                <label className="block text-gray-300 text-sm font-bold mb-2">
-                  Notes
-                </label>
-                <textarea
+                  type="text"
                   value={newLicense.notes}
                   onChange={(e) => setNewLicense({...newLicense, notes: e.target.value})}
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:border-blue-500"
-                  rows={3}
-                  placeholder="Additional notes..."
+                  placeholder="Payment info, etc..."
                 />
               </div>
               
