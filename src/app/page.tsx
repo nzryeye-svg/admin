@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Plus, Shield, Users, Activity, Edit, Trash2, Eye, EyeOff } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { Plus, Shield, Users, Activity, Trash2, Eye, EyeOff } from 'lucide-react'
 import { HWIDLicense } from '@/lib/supabase'
 
 export default function AdminDashboard() {
@@ -10,7 +10,7 @@ export default function AdminDashboard() {
   const [licenses, setLicenses] = useState<HWIDLicense[]>([])
   const [loading, setLoading] = useState(false)
   const [showAddForm, setShowAddForm] = useState(false)
-  const [editingLicense, setEditingLicense] = useState<HWIDLicense | null>(null)
+  // const [editingLicense, setEditingLicense] = useState<HWIDLicense | null>(null)
   const [stats, setStats] = useState({
     total: 0,
     active: 0,
@@ -27,23 +27,7 @@ export default function AdminDashboard() {
     notes: ''
   })
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchLicenses()
-    }
-  }, [isAuthenticated])
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Simple password check - in production, use proper authentication
-    if (password === 'bintang088') {
-      setIsAuthenticated(true)
-    } else {
-      alert('Invalid password')
-    }
-  }
-
-  const fetchLicenses = async () => {
+  const fetchLicenses = useCallback(async () => {
     setLoading(true)
     try {
       const response = await fetch(`/api/admin/hwid?admin_password=bintang088`)
@@ -61,11 +45,27 @@ export default function AdminDashboard() {
         setLicenses(data.licenses)
         calculateStats(data.licenses)
       }
-    } catch (error) {
-      console.error('Error fetching licenses:', error)
+    } catch (err) {
+      console.error('Error fetching licenses:', err)
       alert('Failed to load licenses. Check console for details.')
     }
     setLoading(false)
+  }, [])
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchLicenses()
+    }
+  }, [isAuthenticated, fetchLicenses])
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault()
+    // Simple password check - in production, use proper authentication
+    if (password === 'bintang088') {
+      setIsAuthenticated(true)
+    } else {
+      alert('Invalid password')
+    }
   }
 
   const calculateStats = (licenseData: HWIDLicense[]) => {
@@ -120,8 +120,8 @@ export default function AdminDashboard() {
       } else {
         alert(data.error || 'Failed to add license')
       }
-    } catch (error) {
-      console.error('Error adding license:', error)
+    } catch (err) {
+      console.error('Error adding license:', err)
       alert('Error adding license. Check console for details.')
     }
     setLoading(false)
@@ -146,7 +146,8 @@ export default function AdminDashboard() {
       } else {
         alert(data.error || 'Failed to update license')
       }
-    } catch (error) {
+    } catch (err) {
+      console.error('Error updating license:', err)
       alert('Error updating license')
     }
   }
@@ -167,7 +168,8 @@ export default function AdminDashboard() {
       } else {
         alert(data.error || 'Failed to delete license')
       }
-    } catch (error) {
+    } catch (err) {
+      console.error('Error deleting license:', err)
       alert('Error deleting license')
     }
   }
