@@ -420,10 +420,9 @@ export default function AdminDashboard() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                         <span className={`px-2 py-1 rounded text-xs font-medium ${
                           license.license_type === 'premium' ? 'bg-purple-900 text-purple-300' :
-                          license.license_type === 'enterprise' ? 'bg-yellow-900 text-yellow-300' :
-                          'bg-gray-900 text-gray-300'
+                          'bg-green-900 text-green-300'
                         }`}>
-                          {license.license_type}
+                          {license.license_type === 'free' ? 'Free' : 'Premium'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
