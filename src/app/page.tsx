@@ -185,7 +185,7 @@ export default function AdminDashboard() {
       }
     } catch (err) {
       console.error('❌ Error deleting license:', err)
-      alert('Error deleting license: ' + err.message)
+      alert('Error deleting license: ' + (err instanceof Error ? err.message : String(err)))
     }
   }
 
