@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Plus, Shield, Users, Activity, Trash2, Eye, EyeOff } from 'lucide-react'
+import { Plus, Shield, Users, Activity, Trash2, Eye, EyeOff, Edit3, RefreshCw, Trash } from 'lucide-react'
 import { HWIDLicense } from '@/lib/supabase'
 
 export default function AdminDashboard() {
@@ -10,7 +10,8 @@ export default function AdminDashboard() {
   const [licenses, setLicenses] = useState<HWIDLicense[]>([])
   const [loading, setLoading] = useState(false)
   const [showAddForm, setShowAddForm] = useState(false)
-  // const [editingLicense, setEditingLicense] = useState<HWIDLicense | null>(null)
+  const [showEditForm, setShowEditForm] = useState(false)
+  const [editingLicense, setEditingLicense] = useState<HWIDLicense | null>(null)
   const [stats, setStats] = useState({
     total: 0,
     active: 0,
@@ -24,6 +25,15 @@ export default function AdminDashboard() {
     customer_email: '',
     license_type: 'free',
     notes: ''
+  })
+
+  // Edit license form data
+  const [editFormData, setEditFormData] = useState({
+    customer_name: '',
+    customer_email: '',
+    license_type: 'free',
+    notes: '',
+    is_active: true
   })
 
   const fetchLicenses = useCallback(async () => {
@@ -141,12 +151,114 @@ export default function AdminDashboard() {
       
       if (data.success) {
         fetchLicenses()
+        // Invalidate cache for this HWID
+        await invalidateHWIDCache(license.hwid)
+        alert(`License ${!license.is_active ? 'activated' : 'deactivated'} successfully!`)
       } else {
         alert(data.error || 'Failed to update license')
       }
     } catch (err) {
       console.error('Error updating license:', err)
       alert('Error updating license')
+    }
+  }
+
+  // Function to open edit form
+  const openEditForm = (license: HWIDLicense) => {
+    setEditingLicense(license)
+    setEditFormData({
+      customer_name: license.customer_name || '',
+      customer_email: license.customer_email || '',
+      license_type: license.license_type,
+      notes: license.notes || '',
+      is_active: license.is_active
+    })
+    setShowEditForm(true)
+  }
+
+  // Function to update license
+  const updateLicense = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingLicense) return
+
+    setLoading(true)
+    try {
+      const response = await fetch('/api/admin/hwid', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          admin_password: 'bintang088',
+          id: editingLicense.id,
+          ...editFormData
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      
+      if (data.success) {
+        setShowEditForm(false)
+        setEditingLicense(null)
+        fetchLicenses()
+        // Invalidate cache for this HWID since role might have changed
+        await invalidateHWIDCache(editingLicense.hwid)
+        alert('License updated successfully!')
+      } else {
+        alert(data.error || 'Failed to update license')
+      }
+    } catch (err) {
+      console.error('Error updating license:', err)
+      alert('Error updating license. Check console for details.')
+    }
+    setLoading(false)
+  }
+
+  // Function to invalidate HWID cache
+  const invalidateHWIDCache = async (hwid: string) => {
+    try {
+      const response = await fetch('/api/admin/invalidate-cache', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          admin_password: 'bintang088',
+          hwid: hwid
+        })
+      })
+
+      if (response.ok) {
+        console.log(`Cache invalidated for HWID: ${hwid}`)
+      }
+    } catch (err) {
+      console.error('Error invalidating cache:', err)
+    }
+  }
+
+  // Function to clear all cache
+  const clearAllCache = async () => {
+    if (!confirm('Are you sure you want to clear ALL cached HWID data? This will force all users to re-authenticate.')) {
+      return
+    }
+
+    try {
+      const response = await fetch('/api/admin/clear-cache', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          admin_password: 'bintang088'
+        })
+      })
+
+      if (response.ok) {
+        alert('All cache cleared successfully!')
+      } else {
+        alert('Failed to clear cache')
+      }
+    } catch (err) {
+      console.error('Error clearing cache:', err)
+      alert('Error clearing cache')
     }
   }
 
@@ -278,8 +390,29 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {/* Cache Management Section */}
+        <div className="bg-gray-800 p-6 rounded-lg mb-6">
+          <h3 className="text-lg font-semibold mb-4 flex items-center">
+            <RefreshCw className="h-5 w-5 mr-2" />
+            Cache Management
+          </h3>
+          <div className="flex flex-wrap gap-4">
+            <button
+              onClick={clearAllCache}
+              className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-200 flex items-center"
+            >
+              <Trash className="h-4 w-4 mr-2" />
+              Clear All Cache
+            </button>
+            <div className="text-sm text-gray-400 flex items-center">
+              <Shield className="h-4 w-4 mr-2" />
+              Cache is automatically invalidated when roles are updated
+            </div>
+          </div>
+        </div>
+
         {/* Add License Button */}
-        <div className="mb-6">
+        <div className="mb-6 flex justify-between items-center">
           <button
             onClick={() => setShowAddForm(!showAddForm)}
             className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-200 flex items-center"
@@ -381,6 +514,101 @@ export default function AdminDashboard() {
           </div>
         )}
 
+        {/* Edit License Form */}
+        {showEditForm && editingLicense && (
+          <div className="bg-gray-800 p-6 rounded-lg mb-6">
+            <h3 className="text-lg font-semibold mb-4">Edit License - {editingLicense.hwid}</h3>
+            <form onSubmit={updateLicense} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-gray-300 text-sm font-bold mb-2">
+                  Customer Name
+                </label>
+                <input
+                  type="text"
+                  value={editFormData.customer_name}
+                  onChange={(e) => setEditFormData({...editFormData, customer_name: e.target.value})}
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:border-blue-500"
+                  placeholder="Customer Name"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-gray-300 text-sm font-bold mb-2">
+                  Customer Email
+                </label>
+                <input
+                  type="email"
+                  value={editFormData.customer_email}
+                  onChange={(e) => setEditFormData({...editFormData, customer_email: e.target.value})}
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:border-blue-500"
+                  placeholder="customer@example.com"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-gray-300 text-sm font-bold mb-2">
+                  License Type
+                </label>
+                <select
+                  value={editFormData.license_type}
+                  onChange={(e) => setEditFormData({...editFormData, license_type: e.target.value})}
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:border-blue-500"
+                >
+                  <option value="free">Free</option>
+                  <option value="premium">Premium</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-gray-300 text-sm font-bold mb-2">
+                  Status
+                </label>
+                <select
+                  value={editFormData.is_active ? 'active' : 'inactive'}
+                  onChange={(e) => setEditFormData({...editFormData, is_active: e.target.value === 'active'})}
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:border-blue-500"
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+              
+              <div className="md:col-span-2">
+                <label className="block text-gray-300 text-sm font-bold mb-2">
+                  Notes (optional)
+                </label>
+                <input
+                  type="text"
+                  value={editFormData.notes}
+                  onChange={(e) => setEditFormData({...editFormData, notes: e.target.value})}
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:border-blue-500"
+                  placeholder="Payment info, etc..."
+                />
+              </div>
+              
+              <div className="md:col-span-2 flex gap-4">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-200 disabled:opacity-50"
+                >
+                  {loading ? 'Updating...' : 'Update License'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditForm(false)
+                    setEditingLicense(null)
+                  }}
+                  className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded transition duration-200"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
         {/* Licenses Table */}
         <div className="bg-gray-800 rounded-lg overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-700">
@@ -442,6 +670,13 @@ export default function AdminDashboard() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                         <div className="flex space-x-2">
+                          <button
+                            onClick={() => openEditForm(license)}
+                            className="p-1 rounded hover:bg-gray-600 text-blue-500"
+                            title="Edit"
+                          >
+                            <Edit3 className="h-4 w-4" />
+                          </button>
                           <button
                             onClick={() => toggleLicenseStatus(license)}
                             className={`p-1 rounded hover:bg-gray-600 ${
