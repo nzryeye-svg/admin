@@ -167,31 +167,46 @@ export async function PUT(request: NextRequest) {
 // DELETE: Remove HWID license
 export async function DELETE(request: NextRequest) {
   try {
+    console.log('🗑️ DELETE request received')
     const { searchParams } = new URL(request.url)
     const adminPassword = searchParams.get('admin_password')
     const id = searchParams.get('id')
 
+    console.log('🔑 Admin password check:', adminPassword ? 'provided' : 'missing')
+    console.log('🆔 License ID:', id)
+
     const expectedPassword = process.env.ADMIN_PASSWORD || 'bintang088'
     if (adminPassword !== expectedPassword) {
+      console.log('❌ Unauthorized access attempt')
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       )
     }
 
+    if (!id) {
+      console.log('❌ Missing license ID')
+      return NextResponse.json(
+        { error: 'License ID is required' },
+        { status: 400 }
+      )
+    }
+
+    console.log('🗄️ Attempting to delete from database...')
     const { error } = await supabase
       .from('hwid_licenses')
       .delete()
       .eq('id', id)
 
     if (error) {
-      console.error('Database error:', error)
+      console.error('❌ Database error:', error)
       return NextResponse.json(
-        { error: 'Database error' },
+        { error: 'Database error: ' + error.message },
         { status: 500 }
       )
     }
 
+    console.log('✅ License deleted successfully')
     return NextResponse.json({ 
       success: true, 
       message: 'HWID license deleted successfully' 

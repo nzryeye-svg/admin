@@ -153,12 +153,29 @@ export default function AdminDashboard() {
   const deleteLicense = async (licenseId: string) => {
     if (!confirm('Are you sure you want to delete this license?')) return
 
+    console.log('🗑️ Attempting to delete license:', licenseId)
+
     try {
-      const response = await fetch(`/api/admin/hwid?admin_password=bintang088&id=${licenseId}`, {
+      const url = `/api/admin/hwid?admin_password=bintang088&id=${licenseId}`
+      console.log('🌐 Delete request URL:', url)
+      
+      const response = await fetch(url, {
         method: 'DELETE'
       })
 
-      const data = await response.json()
+      console.log('📡 Delete response status:', response.status)
+      
+      if (!response.ok) {
+        console.error('❌ HTTP error:', response.status, response.statusText)
+        alert(`HTTP error: ${response.status}`)
+        return
+      }
+
+      const text = await response.text()
+      console.log('📄 Raw response text:', text)
+      
+      const data = JSON.parse(text)
+      console.log('📋 Parsed response data:', data)
       
       if (data.success) {
         fetchLicenses()
@@ -167,8 +184,8 @@ export default function AdminDashboard() {
         alert(data.error || 'Failed to delete license')
       }
     } catch (err) {
-      console.error('Error deleting license:', err)
-      alert('Error deleting license')
+      console.error('❌ Error deleting license:', err)
+      alert('Error deleting license: ' + err.message)
     }
   }
 
