@@ -22,7 +22,7 @@ export default function AdminDashboard() {
     hwid: '',
     customer_name: '',
     customer_email: '',
-    license_type: 'basic',
+    license_type: 'free',
     notes: ''
   })
 
@@ -109,7 +109,7 @@ export default function AdminDashboard() {
           hwid: '',
           customer_name: '',
           customer_email: '',
-          license_type: 'basic',
+          license_type: 'free',
           notes: ''
         })
         setShowAddForm(false)
@@ -343,9 +343,8 @@ export default function AdminDashboard() {
                   onChange={(e) => setNewLicense({...newLicense, license_type: e.target.value})}
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:border-blue-500"
                 >
-                  <option value="basic">Basic</option>
+                  <option value="free">Free</option>
                   <option value="premium">Premium</option>
-                  <option value="enterprise">Enterprise</option>
                 </select>
               </div>
               

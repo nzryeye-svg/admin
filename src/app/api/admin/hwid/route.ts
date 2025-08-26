@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
       hwid: hwid.toUpperCase(),
       customer_name: customer_name || null,
       customer_email: customer_email || null,
-      license_type: license_type || 'basic',
+      license_type: license_type || 'free',
       notes: notes || null,
       is_active: true
     }

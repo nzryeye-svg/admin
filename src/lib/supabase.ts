@@ -15,7 +15,7 @@ export interface HWIDLicense {
   hwid: string
   customer_name: string | null
   customer_email: string | null
-  license_type: string
+  license_type: 'free' | 'premium'
   is_active: boolean
   created_at: string
   updated_at: string
