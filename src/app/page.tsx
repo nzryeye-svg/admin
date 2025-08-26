@@ -195,7 +195,7 @@ export default function AdminDashboard() {
         <div className="bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-md">
           <div className="text-center mb-6">
             <Shield className="mx-auto h-12 w-12 text-blue-500 mb-4" />
-            <h1 className="text-2xl font-bold text-white">Yeyodra Admin</h1>
+            <h1 className="text-2xl font-bold text-white">Zenith Admin</h1>
             <p className="text-gray-400">HWID License Management</p>
           </div>
           
@@ -232,7 +232,7 @@ export default function AdminDashboard() {
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <Shield className="h-8 w-8 text-blue-500 mr-3" />
-              <h1 className="text-2xl font-bold">Yeyodra Admin Dashboard</h1>
+              <h1 className="text-2xl font-bold">Zenith Admin Dashboard</h1>
             </div>
             <button
               onClick={() => setIsAuthenticated(false)}
